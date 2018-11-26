@@ -8,13 +8,18 @@ sub opt_name {($opt) = @_; return  sprintf "--%s|-%s", $opt, substr $opt, 0, 1 }
                        ltcbtc ethusd etheur ethbtc bchusd bcheur bchbtc /;
 %OPT=( 'pair'           => opt_info ('=s',  'specify a currency from this range ('.join ('|', @CURRENCY_PAIRS) .')'),
        'base-url'       => opt_info ( ':s', 'specify an API base URL' ),
-       'max-connection' => opt_info ( ':s', 'specify timeout on HTTP request' ));
+       'max-connection' => opt_info ( ':s', 'specify timeout on HTTP request' ),
+       'colour'         => opt_info ( '',   'turn colour off' ),
+       'help'           => opt_info ( '',   'print this help' ));
 %VARS = ();
 #__________________ USAGE
 (( $l = length $_) && ($max_opt < $l) && ($max_opt = $l)) foreach keys %OPT;
 $max_opt += length '[--|--]';
 $USAGE = "Usage: $0 ".join (' ', ( map {sprintf "\n%-*s%s",  $max_opt, opt_name($_), $OPT{$_}{desc}} keys %OPT));
+#__________________ CONSTS
+%COLS = ('bg'=>"\e[40m", 'title'=>"\e[36m", 'field'=>"\e[33m", 'val'=>"\e[1;32m", 'stop'=>"\e[0m");
 
+#__________________ BYE
 sub Exit { print "@_\n"; exit }
 #__________________
 sub init_args {
@@ -46,21 +51,21 @@ sub print_json {
     for (; $str =~ /"([^"]+)"\s*:\s*"([^"]+)"/; $json_data{$1}=$2, $str=$'){}
 
     $title = 'Current price as of ' . scalar(localtime($json_data{timestamp}));
-    $out   = "$title";
+    $out   = "$COLS{bg}$COLS{title}$title$COLS{stop}";
     $line  = '=' x length($title);
-    $out  .= "\n$line\n" . join ("\n", sort (map { $_ eq 'timestamp' ?
-             () : "\t$_\t$json_data{$_}" } keys %json_data));
+    $out  .= "\n$COLS{bg}$COLS{title}$line$COLS{stop}\n" . join ("\n", sort (map { $_ eq 'timestamp' ?
+             () : "\t$COLS{bg}$COLS{field}$_\t$COLS{bg}$COLS{val}$json_data{$_}$COLS{stop}" } keys %json_data));
     print "$out\n";
 }
 #__________________
 sub main {
-   init_args();
-   ($str, $exit_code) = get_json ($VARS{pair});
-   if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
-       printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
-   } else {
-       print_json($str);
-   }
+    init_args();
+    ($str, $exit_code) = get_json ($VARS{pair});
+    if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
+        printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
+    } else {
+        print_json($str);
+    }
 }
 
 main;
