@@ -59,13 +59,13 @@ sub print_json {
 }
 #__________________
 sub main {
-    init_args();
-    ($str, $exit_code) = get_json ($VARS{pair});
-    if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
-        printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
-    } else {
-        print_json($str);
-    }
+   init_args();
+   ($str, $exit_code) = get_json ($VARS{pair});
+   if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
+       printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
+   } else {
+       print_json($str);
+   }
 }
 
 main;
