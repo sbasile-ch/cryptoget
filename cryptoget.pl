@@ -23,6 +23,7 @@ $CLEAR_SCREEN= qx{clear};
 
 #__________________ BYE
 sub Exit { print "@_\n"; exit }
+$SIG{INT} = sub { Exit('Bye')}; #manage Ctrl-C
 #__________________
 sub init_args {
    @getop = map { "$_$OPT{$_}{type}" } keys %OPT;
