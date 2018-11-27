@@ -19,6 +19,7 @@ $max_opt += length '[--|--]';
 $USAGE = "Usage: $0 ".join (' ', ( map {sprintf "\n%-*s%s",  $max_opt, opt_name($_), $OPT{$_}{desc}} keys %OPT));
 #__________________ CONSTS
 %COLS = ('bg'=>"\e[40m", 'title'=>"\e[36m", 'field'=>"\e[33m", 'val'=>"\e[1;32m", 'stop'=>"\e[0m");
+$CLEAR_SCREEN= qx{clear};
 
 #__________________ BYE
 sub Exit { print "@_\n"; exit }
@@ -58,23 +59,23 @@ sub print_json {
     $line  = '=' x length($title);
     $out  .= "\n$COLS{bg}$COLS{title}$line$COLS{stop}\n" . join ("\n", sort (map { $_ eq 'timestamp' ?
              () : "\t$COLS{bg}$COLS{field}$_\t$COLS{bg}$COLS{val}$json_data{$_}$COLS{stop}" } keys %json_data));
-    print "$out\n";
+    print "$CLEAR_SCREEN$out\n";
 }
 #__________________
 sub main {
-   init_args();
-   $retry = $VARS{'refresh-time'};
-   $retry = 1000 if $retry eq '0';
-   do {
-       ($str, $exit_code) = get_json ($VARS{pair});
-       if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
-           printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
-       } else {
-           print_json($str) if $str ne $prev;
-           $prev = $str;
-       }
-       sleep $retry/1000;
-   } while ($retry);
+    init_args();
+    $retry = $VARS{'refresh-time'};
+    $retry = 1000 if $retry eq '0';
+    do {
+        ($str, $exit_code) = get_json ($VARS{pair});
+        if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
+            printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
+        } else {
+            print_json($str) if $str ne $prev;
+            $prev = $str;
+        }
+        sleep $retry/1000;
+    } while ($retry);
 }
 
 main;
