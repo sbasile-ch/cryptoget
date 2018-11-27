@@ -9,6 +9,7 @@ sub opt_name {($opt) = @_; return  sprintf "--%s|-%s", $opt, substr $opt, 0, 1 }
 %OPT=( 'pair'           => opt_info ('=s',  'specify a currency from this range ('.join ('|', @CURRENCY_PAIRS) .')'),
        'base-url'       => opt_info ( ':s', 'specify an API base URL' ),
        'max-connection' => opt_info ( ':s', 'specify timeout on HTTP request' ),
+       'refresh-time'   => opt_info ( ':s', 'specify a refresh rate (in ms)' ),
        'colour'         => opt_info ( '',   'turn colour off' ),
        'help'           => opt_info ( '',   'print this help' ));
 %VARS = ();
@@ -38,6 +39,8 @@ sub check_args {
     %range = map { $_ => 1 } @CURRENCY_PAIRS;
     return 'missing currency selection' if ! $VARS{pair};
     return "$VARS{pair} not in range" if ! $range{$VARS{pair}};
+    return "$VARS{'refresh-time'} wrong value for refresh time" if $VARS{'refresh-time'} &&
+                                                                   $VARS{'refresh-time'} !~ /^[0-9]+$/;
     return 0;
 }
 #__________________
@@ -60,12 +63,18 @@ sub print_json {
 #__________________
 sub main {
    init_args();
-   ($str, $exit_code) = get_json ($VARS{pair});
-   if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
-       printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
-   } else {
-       print_json($str);
-   }
+   $retry = $VARS{'refresh-time'};
+   $retry = 1000 if $retry eq '0';
+   do {
+       ($str, $exit_code) = get_json ($VARS{pair});
+       if ( $exit_code or (substr ($str, 0, 1) ne '{' )) {
+           printf "error on API call: [%s][%.30s..]\n", $exit_code, $str;
+       } else {
+           print_json($str) if $str ne $prev;
+           $prev = $str;
+       }
+       sleep $retry/1000;
+   } while ($retry);
 }
 
 main;
