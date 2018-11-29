@@ -1,0 +1,109 @@
+/*QuickReset*/ * {margin:0;box-sizing:border-box;}
+
+html, body{
+    height:100vh;
+  }
+  
+  body {
+    display: flex;
+    flex-direction: column;
+    font-family: "Lato", sans-serif;
+  }
+
+  header {
+    height: 90px;
+    width: 100%;
+    background: linear-gradient(to bottom, hsl(75,100%,16%) 0%,hsl(76,100%,28%) 100%);
+    padding: 5px;
+    color: #cc9900;
+  }
+  .menu-bar {
+    height: 25px;
+    width: 100%;
+    text-align: center;
+    background: rgba(0, 0, 0, .5);
+  }
+  
+  .main-area {
+    flex: 1;
+    background: fixed linear-gradient(to bottom, hsl(200,27%,2%) 0%,hsl(203,29%,26%) 100%);
+    border: 1px solid #33B5E5;
+    overflow: hidden;
+  }
+  
+  footer {
+    height: 25px;
+    width: 100%;
+    background: #132535;
+    padding: 5px;
+    text-align: center;
+  }
+  .footer-txt {
+    color: #cc9900;
+    font-size: 12px;
+    font-family: "Courier New";
+  }
+  
+   .text-default {
+      color: green;
+      text-align: left;
+      font-size: 15px;
+  } 
+  
+  .flex-main-wrapper {
+       display: flex;
+       flex-flow: row nowrap;
+       justify-content: center;
+       height:100%;
+  }
+  
+  .col-menu {
+     border-right: 1px solid #33B5E5;
+     width: 20%;
+     padding: 25px 20px 25 25px;
+     /* margin-left: 30px; */
+  }
+  .col-out {
+     border-right: 1px solid #33B5E5;
+     width: 50%;
+  }
+  .col-right {
+     width: 30%;
+  }
+  
+  .col-menu .col-out .col-right {
+     height: 100%;
+  }
+ 
+  /*__________________ NAV BAR __________________*/
+    
+  .topnav {
+    overflow: hidden;
+    background-color: #333;
+    color: #f2f2f2;
+    text-align: center;
+    font-size: 20px;
+  }
+  
+  /*__________________ OUTPUT AREA __________________*/
+  
+  .output-area {
+    height: 95%;
+    width: 100%;
+    background-color: #e0e0eb;
+    overflow: auto;
+  }
+
+  .json-table {
+    background-color: #ffffff;
+    font-family: "Courier New";
+    font-size: 10px;
+  }
+  .td-key {
+    color: #000000;
+  }
+  .td-val {
+  }
+
+  /*__________________ END __________________*/
+  
