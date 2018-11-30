@@ -3,7 +3,7 @@
 html, body{
     height:100vh;
   }
-  
+
   body {
     display: flex;
     flex-direction: column;
@@ -74,7 +74,7 @@ html, body{
   .col-menu .col-out .col-right {
      height: 100%;
   }
- 
+  
   /*__________________ NAV BAR __________________*/
     
   .topnav {
@@ -84,7 +84,7 @@ html, body{
     text-align: center;
     font-size: 20px;
   }
-  
+
   /*__________________ OUTPUT AREA __________________*/
   
   .output-area {
