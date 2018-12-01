@@ -10,6 +10,9 @@ var Currencies;
 const BaseUrl='https://www.bitstamp.net/api/v2/ticker/';
 //const BaseUrl='https://www.google.com:81/';  // use to test timout
 
+const pusher = new Pusher('de504dc5763aeef9ff52'); // websocket key
+const wsChannel = 'live_trades_';
+const wsEvent   = 'trade';
 const RequestTimeout = 4000;
 
 //______________________________________________________
@@ -18,48 +21,53 @@ class Currency {
     constructor(name) {
       this.currName = name;
       this.httpReq = new XMLHttpRequest();
+      this.wsChannel = pusher.subscribe(wsChannel + name);
+      this.wsChannel.bind('trade', function (data) {
+          processJSON(name, data);
+        });
     }
     //_________________
-    manageTimeout(mode) {
-        var thisObj = this;
-        switch (mode) {
-            case 0: clearTimeout(this.reqTimeout); 
-                    break;
-            case 1:  this.reqTimeout = setTimeout(function () {
-                                                    thisObj.httpReq.abort();
-                                                    thisObj.error(`Request timeout after ${RequestTimeout} ms`)
-                                                    },
-                                                    RequestTimeout);
-                    break;
-        }
-    }
+    // manageTimeout(mode) {
+    //     var thisObj = this;
+    //     switch (mode) {
+    //         case 0: clearTimeout(this.reqTimeout); 
+    //                 break;
+    //         case 1:  this.reqTimeout = setTimeout(function () {
+    //                                                 thisObj.httpReq.abort();
+    //                                                 thisObj.error(`Request timeout after ${RequestTimeout} ms`)
+    //                                                 },
+    //                                                 RequestTimeout);
+    //                 break;
+    //     }
+    // }
     //_________________
-    manageResponse () {
-        var h = this.httpReq;
-        if (h.readyState == 4 && h.status == 200) {
-            this.manageTimeout(0); //clear
-            processJSON (this.currName, h.responseText);
-        }
-    }
+    // manageResponse () {
+    //     var h = this.httpReq;
+    //     if (h.readyState == 4 && h.status == 200) {
+    //         this.manageTimeout(0); //clear
+    //         processJSON (this.currName, h.responseText);
+    //     }
+    // }
     //_________________
-    getCurrency () {
-        var thisObj = this;
-        var url = BaseUrl+this.currName;
-        this.httpReq.onreadystatechange = function () {
-            if (this.readyState == 4) {
-                thisObj.manageTimeout(0); //clear
-                if (this.status == 200) {
-                    processJSON (thisObj.currName, this.responseText);
-                } else {
-                    thisObj.error(`error on Request "${url}: [${this.status}][${this.statusText}]`);
-                }
-            }
-        }
-        this.httpReq.open("GET", url, true);
-        this.httpReq.send();
-        this.manageTimeout(1); //set
-    }
-    _________________
+    // getCurrency () {
+    //     var thisObj = this;
+    //     var url = BaseUrl+this.currName;
+    //     this.httpReq.onreadystatechange = function () {
+    //         if (this.readyState == 4) {
+    //             thisObj.manageTimeout(0); //clear
+    //             if (this.status == 200) {
+    //                 processJSON (thisObj.currName, this.responseText);
+    //             } else {
+    //                 thisObj.error(`error on Request "${url}: [${this.status}][${this.statusText}]`);
+    //             }
+    //         }
+    //     }
+    //     this.httpReq.open("GET", url, true);
+    //     this.httpReq.send();
+    //     this.manageTimeout(1); //set
+    // }
+
+    //_________________
     error (err) {
         console.log(err);
     }
@@ -79,52 +87,43 @@ class Currency {
 
 //______________________________________________________
 function initApp () {
+    $checkBoxes.empty();
     $outTable.empty();
     Currencies = new Map();
     Keys.sort();
     CurrNames.sort();
-    CurrNames.forEach(function(currName) { // create checkBox & Table row for every Currency
+    CurrNames.forEach(function(currName) { 
         cur = new Currency (currName);
         Currencies.set(currName, cur);
     });
-    initWebSocket();         // start retrieving data
+    initAllNoneButtons();    // attach an event listener to control check boxes
+    initCurrenciesChBoxes(); // attach an event listener to currency check boxes
+
+    $('#'+IdCbx+'btcusd').click(); //start with btcusd 
 }
 //______________________________________________________
-function getCurrency2 (cur) {
-    var url = BaseUrl+cur;
-    fetch(url, {
-        method: "GET", // *GET, POST, PUT, DELETE, etc.
-        //mode: "cors", // no-cors, cors, *same-origin
-        cache: "no-store", // *default, no-cache, reload, force-cache, only-if-cached
-        credentials: "same-origin", // include, *same-origin, omit
-        //headers: { 
-        //    "Content-Type": "application/json; charset=utf-8",
-            // "Content-Type": "application/x-www-form-urlencoded",
-        //    "Access-Control-Allow-Origin": "*"
-        //    'Access-Control-Allow-Headers': 'POST, GET, PUT, DELETE, OPTIONS, HEAD, authorization'
-        //},
-        //redirect: "follow", // manual, *follow, error
-        //referrer: "no-referrer", // no-referrer, *client
-        //body: JSON.stringify(data), // body data type must match "Content-Type" header
-    })
-    .then(response => {
-        if(response.ok) {
-            //return response.json();
-            return response;
-          } else {
-            throw new Error(`Server answered ${response.status} to ${url}`);
-          }
-    })
-    .then(response=> {
-      var str = JSON.stringify(response.json());
-      console.log(str);
-      alert (str);
-    }).catch(error => {
-        console.log(error);
-      });
-}
+
+
+// var placeholder = document.getElementById('trades_placeholder'),
+// pusher = new Pusher('de504dc5763aeef9ff52'),
+// tradesChannel = pusher.subscribe('live_trades_eurusd'),
+// child = null,
+// i = 0;
+
+// tradesChannel.bind('trade', function (data) {
+// if (i === 0) {
+//     placeholder.innerHTML = '';
+// }
+// child = document.createElement('div');
+// child.innerHTML = '(' + data.timestamp + ') ' + data.id + ': ' + data.amount + ' BTC @ ' + data.price + ' USD ' + data.type;
+// placeholder.appendChild(child);
+// i++;
+// });
+
+
 //______________________________________________________
 function processJSON (name, json) {
     console.log(name+':'+JSON.stringify(json));
 }
+
 //______________________________________________________
