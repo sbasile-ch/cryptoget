@@ -45,6 +45,7 @@ func getJSON(currName string) (json string, err error) {
 	json = string(body)
 	if json[:1] != "{" {
 		err = fmt.Errorf("response not json:[%s]", json[:30])
+		json = ""
 	} else {
 		json = fmt.Sprintf("{\"currName\":\"%s\",", currName) + json[1:]
 	}
@@ -65,16 +66,28 @@ func CallAPI(currName string) {
 
 //webSocket to publish JSONS
 func webSocket(w http.ResponseWriter, r *http.Request) {
+	var errR, errW int
+	var tooManyErr = 10
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Printf("unable to create websocket:[%s]\n", err)
+		return
+	}
 	for {
 		if len(CurrNames) < 1 { // first wait to receive the list of keys
 			var msg []byte
 			_, msg, err = conn.ReadMessage()
 			if err != nil {
 				fmt.Printf("error reading from websocket:[%s]\n", err)
-				return
+				errR++
+				if errR > tooManyErr {
+					return
+				} else {
+					continue
+				}
 			}
+			errR = 0
 			CurrNames = strings.Split(string(msg), ",")
 			sort.Strings(CurrNames)
 			for _, key := range CurrNames {
@@ -86,8 +99,14 @@ func webSocket(w http.ResponseWriter, r *http.Request) {
 			b := []byte(json)
 			if err = conn.WriteMessage(websocket.TextMessage, b); err != nil {
 				fmt.Printf("error writing on websocket:[%s]\n", err)
-				return
+				errW++
+				if errW > tooManyErr {
+					return
+				} else {
+					continue
+				}
 			}
+			errW = 0
 		}
 	}
 }
