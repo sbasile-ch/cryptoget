@@ -11,9 +11,6 @@ var JsonSocket;
 const BaseUrl='https://www.bitstamp.net/api/v2/ticker/';
 //const BaseUrl='https://www.google.com:81/';  // use to test timout
 
-//const pusher = new Pusher('de504dc5763aeef9ff52'); // websocket key
-const wsChannel = 'live_trades_';
-const wsEvent   = 'trade';
 const RequestTimeout = 4000;
 const IdCbx      = 'Cbx-';
 const IdTr       = 'Tr-';
@@ -21,6 +18,7 @@ const IdTdName   = 'TdName-';
 const IdTdTable  = 'TdTable-';
 const IdTdKeyVal = 'TdTableVal-';
 const IdTimeVal  = 'TimeVal-';
+const IdCanvas   = 'Canvas-';
 const IdKeyRadio = 'Key-';
 const BufferSamples = 10;
 const ClassChanged = 'val-changed';
@@ -38,6 +36,7 @@ class Currency {
       this.Samples = [];
       this.lastSample = 0;
     }
+
     //_________________
     resetValues () { // reset to default CSS properties of JSON values
         var t = IdTdKeyVal+this.currName;
@@ -64,13 +63,50 @@ class Currency {
             }
             this.lastSample = (this.lastSample + 1) % BufferSamples;
             this.Samples[this.lastSample] = json;
+
+            this.printGraph();
         }
     }
-
     //_________________
-    // error (err) {
-    //     console.log(err);
-    // }
+    getSamples(key) {  // retrieve data point to graph out
+        var values = []; 
+        var labels = [];
+        for (var i=1; i<=BufferSamples; i++) {
+            var json = this.Samples[(this.lastSample + i) % BufferSamples];
+            var yVal = 0;
+            if (json && json[key]) {
+                yVal = json[key];
+            }
+            values[i-1] = yVal;
+            labels[i-1]=i;
+        }
+        return {values: values, labels:labels};
+    }
+    //_________________
+    printGraph() { // create the graph
+        var points = this.getSamples(selectedKey);
+        var chart = new Chart(IdCanvas+this.currName, {
+            type: 'line',
+            data: {
+                labels: points.labels,
+                datasets: [{
+                    steppedLine: true,
+                    data: points.values,
+                    borderColor:'#ff6347',
+                    fill: false
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: selectedKey
+                },
+                legend: {
+                    display: false
+              }
+            }
+        });
+    }
 }
 
 //______________________________________________________
@@ -79,7 +115,23 @@ function createCurrCheckBox (currName) {
     var cbx = $(nodeCbx);
     cbx.appendTo($checkBoxes);
 }
-
+//______________________________________________________
+function createKeyRadios () {
+    Keys.forEach(function(key) {
+        var nodeRadio = `<lable><input type="radio" name="keys" value="${key}"> ${key}</label><br>`;
+        var rd = $(nodeRadio);
+        rd.appendTo($keysRadio);
+    });
+    $('input:radio[name=keys]').on('change',function () {
+        rd = $(this);
+        if (rd.is(':checked')) { 
+            selectedKey = rd.val();
+            Currencies.forEach(function(curr) { // re-graph for selectedKey
+                curr.printGraph();
+            });
+        }
+    });
+}
 //______________________________________________________
 function createCurrTblRow (currName) {
     var lineTbl  = `<tr id="${IdTr}${currName}"><td id="${IdTdName}${currName}">${currName}</td>`;
@@ -115,7 +167,6 @@ function initCurrenciesChBoxes () {
     $('input:checkbox[name=currency]').on('click',function () { 
         $row = $('#'+IdTr+this.value);
         if (this.checked) {
-            //Currencies.get(this.value).getCurrency();
             Currencies.get(this.value).resetValues();
             Currencies.get(this.value).printGraph();
             $row.show();
@@ -139,11 +190,13 @@ function initApp () {
         cur = new Currency (currName);
         Currencies.set(currName, cur);
     });
+    createKeyRadios();       
     initAllNoneButtons();    // attach an event listener to control check boxes
     initCurrenciesChBoxes(); // attach an event listener to currency check boxes
     initWebSocket();         // start retrieving data
 
     $('#'+IdCbx+'btcusd').click(); //start with btcusd 
+    $('input:radio[name=keys][value=bid]').click(); // start with key:bid
 }
 //______________________________________________________
 function initWebSocket () {
