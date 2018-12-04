@@ -5,7 +5,7 @@ CRYPTO GET
 
 The following is the pre-requisite for `Task1` `Task2` and `Task3`
 ```shell
- git clone <this repo> cryptoget
+ git clone https://github.com/sbasile-ch/cryptoget.git cryptoget
  cd !$
  ```
 
