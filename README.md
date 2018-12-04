@@ -45,7 +45,7 @@ chmod +x *.pl && ./*.pl --pair btcusd
 
 # Task 2
 
-I achieved `Task2`, with [minor code](https://github.com/sbasile-ch/cryptoget/compare/23b03c4..94378e0) on top of the previous perl script.
+I achieved `Task2`, with [minor code](https://github.com/sbasile-ch/cryptoget/compare/94378e0..23b03c4) on top of the previous perl script.
 
 
 ## Installation
